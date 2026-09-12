@@ -1,5 +1,7 @@
 import time 
 import tkinter as tk
+from tkinter import messagebox
+import mysql.connector
 
 class KaytoApp:
     def __init__(self, master):
@@ -43,6 +45,29 @@ class KaytoApp:
     
     def stop(self):
         self.timer_running = False
+        
+        minutes = self.timer_seconds // 60
+        seconds = self.timer_seconds % 60
+        time_str = f"{minutes:02d}:{seconds:02d}"
+        
+        try:
+            db = mysql.connector.connect(
+                host="127.0.0.1",
+                user="root",
+                password="",
+                database="db_kayto"
+            )
+            cursor = db.cursor()
+            query = "INSERT INTO timer_history (recorded_time) VALUES (%s)"
+            cursor.execute(query, (time_str,))
+            db.commit()
+            
+            messagebox.showinfo("Berhasil", f"Waktu {time_str} disimpan ke database!")
+            
+            cursor.close()
+            db.close()
+        except mysql.connector.Error as err:
+            messagebox.showerror("Error", f"Gagal simpan ke database:\n{err}")
 
 
 root = tk.Tk()
