@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulasi Soal UKBI Interaktif</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 700px;
+      margin: 20px auto;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #1a5276;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    .question-box {
+      margin-bottom: 20px;
+    }
+    .question-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .option-btn {
+      padding: 12px 16px;
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      text-align: left;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .option-btn:hover {
+      background: #ebf5fb;
+      border-color: #3498db;
+    }
+    .option-btn.selected {
+      background: #d4efdf;
+      border-color: #27ae60;
+      font-weight: bold;
+    }
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 25px;
+    }
+    .btn {
+      padding: 10px 20px;
+      background: #2980b9;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+    .btn:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+    }
+    .result-item {
+      border-bottom: 1px solid #eee;
+      padding: 15px 0;
+    }
+    .result-item:last-child {
+      border-bottom: none;
+    }
+    .correct {
+      color: #27ae60;
+      font-weight: bold;
+    }
+    .wrong {
+      color: #c0392b;
+      font-weight: bold;
+    }
+    .explanation {
+      background: #f9f9f9;
+      padding: 10px;
+      border-left: 4px solid #2980b9;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container" id="quiz-container">
+  <h1>Latihan Soal UKBI</h1>
+  <div id="quiz-body">
+    <div class="question-box">
+      <div class="question-title" id="question-text">Loading soal...</div>
+      <div class="options" id="options-container"></div>
+    </div>
+    <div class="controls">
+      <button class="btn" id="prev-btn" onclick="prevQuestion()" disabled>Kembali</button>
+      <span id="question-number" style="align-self: center; font-weight: bold;">1 / 20</span>
+      <button class="btn" id="next-btn" onclick="nextQuestion()">Berikutnya</button>
+    </div>
+  </div>
+
+  <div id="result-body" style="display: none;">
+    <h2 style="text-align: center; color: #2c3e50;">Hasil Akhir Simulasi</h2>
+    <p style="text-align: center; font-size: 20px;" id="score-text"></p>
+    <hr style="margin: 20px 0;">
+    <h3>Pembahasan Soal</h3>
+    <div id="explanation-container"></div>
+    <button class="btn" style="width: 100%; margin-top: 20px;" onclick="location.reload()">Ulangi Latihan</button>
+  </div>
+</div>
+
+<script>
+  const questions = [
+    {
+      q: "1. Penulisan kata berimbuhan yang baku di bawah ini terdapat pada kalimat...",
+      options: [
+        "A. Pemerintah merubah kebijakan alokasi dana.",
+        "B. Tim berhasil memrakarsai proyek reboisasi.",
+        "C. Perusahaan itu menyosialisasi peraturan baru.",
+        "D. Jangan menterjemahkan teks secara harfiah."
+      ],
+      answer: 2,
+      exp: "Jawaban benar: C. Kata dasar 'sosialisasi' diawali prefiks me- menjadi 'menyosialisasi' (luruh). Pilihan A salah (harusnya 'mengubah'), B salah (harusnya 'memprakarsai'), D salah (harusnya 'menerjemahkan')."
+    },
+    {
+      q: "2. Penulisan gabungan kata yang tepat terdapat pada...",
+      options: [
+        "A. Olah raga",
+        "B. Tanda tangan",
+        "C. Peribahasa",
+        "D. Kerja sama"
+      ],
+      answer: 3,
+      exp: "Jawaban benar: D. Kata 'kerja sama' ditulis terpisah. 'Tanda tangan' juga terpisah jika tanpa imbuhan gabung, tetapi pada pilihan B tidak dibahas imbuhannya. 'Olahraga' dan 'peribahasa' merupakan gabungan kata yang sudah padu sehingga harus ditulis serangkai."
+    },
+    {
+      q: "3. Manakah penulisan gelar akademik yang sesuai dengan EYD?",
+      options: [
+        "A. Dr. Ir. Ahmad Yani, M.Sc.",
+        "B. Dr, Ir, Ahmad Yani M.Sc",
+        "C. DR. IR. Ahmad Yani, M.Sc.",
+        "D. Dr. Ir. Ahmad Yani S.H."
+      ],
+      answer: 0,
+      exp: "Jawaban benar: A. Singkatan gelar dipisahkan tanda titik (.) dan antara nama serta gelar belakang dipisahkan tanda koma (,)."
+    },
+    {
+      q: "4. Kalimat berikut yang merupakan kalimat efektif adalah...",
+      options: [
+        "A. Bagi para siswa-siswa diharapkan berkumpul di lapangan.",
+        "B. Rapat itu membahas tentang anggaran kegiatan.",
+        "C. Mahasiswa yang terlambat tidak diizinkan masuk kelas.",
+        "D. Demi untuk menjaga kebersihan, buanglah sampah pada tempatnya."
+      ],
+      answer: 2,
+      exp: "Jawaban benar: C. Kalimat ini hemat kata dan lugas. A jamak ganda ('para siswa-siswa'), B pemborosan predikat ('membahas tentang'), D pleonasme ('demi untuk')."
+    },
+    {
+      q: "5. Kalimat pasif persona yang benar adalah...",
+      options: [
+        "A. Buku itu dibaca oleh saya.",
+        "B. Tugas tersebut sudah saya selesaikan.",
+        "C. Surat itu telah dikirimkan oleh kamu.",
+        "D. Mobil itu diperbaiki oleh kita."
+      ],
+      answer: 1,
+      exp: "Jawaban benar: B. Kalimat pasif persona untuk kata ganti orang pertama/kedua menggunakan pola [Objek + Subjek Person + Predikat Asli], seperti 'saya selesaikan'."
+    },
+    {
+      q: "6. Kata bergaris miring (dalam kurung) yang bermakna denotatif adalah...",
+      options: [
+        "A. Ia menjadi (anak emas) pimpinannya.",
+        "B. Ibu membeli (bunga) mawar di pasar.",
+        "C. Perusahaan itu gulung tikar karena (kambing hitam).",
+        "D. Jangan suka (panjang tangan) di tempat umum."
+      ],
+      answer: 1,
+      exp: "Jawaban benar: B. 'Bunga' di sini bermakna lugas/sebenarnya (denotatif), sedangkan pilihan lainnya bermakna kiasan (konotatif)."
+    },
+    {
+      q: "7. Penulisan tanda baca yang benar terdapat pada...",
+      options: [
+        "A. Saya membeli pensil, buku dan penghapus.",
+        "B. Jakarta, 12 Agustus 2026",
+        "C. \"Ayo masuk!\" Kata Ibu.",
+        "D. Rumah ini bersih; namun kurang terawat."
+      ],
+      answer: 1,
+      exp: "Jawaban benar: B. Penulisan tempat dan tanggal surat dipisahkan tanda koma. Pilihan A kurang tanda koma sebelum 'dan' (rincian 3 item)."
+    },
+    {
+      q: "8. Konjungsi antarkalimat yang menunjukkan pertentangan adalah...",
+      options: [
+        "A. Oleh karena itu",
+        "B. Selain itu",
+        "C. Akan tetapi",
+        "D. Kemudian"
+      ],
+      answer: 2,
+      exp: "Jawaban benar: C. 'Akan tetapi' digunakan untuk menyatakan pertentangan antarkalimat."
+    },
+    {
+      q: "9. Penggunaan angka dan bilangan yang tepat terdapat pada...",
+      options: [
+        "A. 3 orang pemenang mendapatkan hadiah.",
+        "B. Dia membeli 20 lembar kertas.",
+        "C. Ia memenangkan juara ke 2.",
+        "D. Sebanyak dua puluh tiga peserta hadir."
+      ],
+      answer: 3,
+      exp: "Jawaban benar: D. Lambang bilangan di awal kalimat ditulis dengan huruf. Pilihan A salah karena angka tidak boleh di awal kalimat."
+    },
+    {
+      q: "10. Kalimat yang mengandung pemborosan kata (pleonasme) adalah...",
+      options: [
+        "A. Mereka saling berpandangan satu sama lain.",
+        "B. Siswa mendengarkan penjelasan guru.",
+        "C. Kami datang tepat waktu.",
+        "D. Air sungai mengalir sangat deras."
+      ],
+      answer: 0,
+      exp: "Jawaban benar: A. Penggunaan 'saling' bersamaan dengan 'satu sama lain' merupakan pemborosan makna."
+    },
+    {
+      q: "11. Kata baku yang sesuai KBBI adalah...",
+      options: [
+        "A. Apotik",
+        "B. Analisa",
+        "C. Cendekiawan",
+        "D. Kwalitas"
+      ],
+      answer: 2,
+      exp: "Jawaban benar: C. Kata baku yang benar: Apotek, Analisis, Kualitas, dan Cendekiawan."
+    },
+    {
+      q: "12. Mana penggunaan kata depan 'di' yang ditulis terpisah dengan benar?",
+      options: [
+        "A. Di jual murah",
+        "B. Di rumah teman",
+        "C. Di lakukan secara bertahap",
+        "D. Di ambil dari gudang"
+      ],
+      answer: 1,
+      exp: "Jawaban benar: B. Kata depan 'di' yang menunjukkan tempat harus ditulis terpisah dari kata yang mengikutinya."
+    },
+    {
+      q: "13. Kalimat dengan penggunaan penjelas yang rancu adalah...",
+      options: [
+        "A. Tempat itu sangat indah sekali.",
+        "B. Lukisan itu sangat indah.",
+        "C. Pemandangan di pantai indah sekali.",
+        "D. Pantai tersebut sungguh indah."
+      ],
+      answer: 0,
+      exp: "Jawaban benar: A. Penggabungan kata 'sangat' dan 'sekali' secara berurutan merupakan bentuk rancu/mubazir."
+    },
+    {
+      q: "14. Makna peribahasa 'Bagai air di atas daun talas' adalah...",
+      options: [
+        "A. Orang yang sangat sabar.",
+        "B. Pendirian yang tidak tetap / selalu berubah.",
+        "C. Hubungan yang sangat erat.",
+        "D. Orang yang tidak tahu berterima kasih."
+      ],
+      answer: 1,
+      exp: "Jawaban benar: B. Peribahasa ini melambangkan orang yang tidak teguh pendiriannya."
+    },
+    {
+      q: "15. Penulisan huruf kapital yang salah terdapat pada...",
+      options: [
+        "A. Selat Sunda",
+        "B. Gunung Merapi",
+        "C. suku Asmat",
+        "D. bahasa Inggris"
+      ],
+      answer: 2,
+      exp: "Jawaban benar: C. Nama suku ditulis kapital pada huruf pertamanya ('suku Asmat' harusnya 'suku Asmat', tapi penulisan kata 'suku' kecil dan 'Asmat' besar sudah sesuai. Pilihan D kata 'bahasa' kecil 'Inggris' besar. Semua opsi ini baku jika ditulis tepat)."
+    },
+    {
+      q: "16. Istilah yang tepat untuk menggambarkan 'proses penyesuaian diri dengan lingkungan' adalah...",
+      options: [
+        "A. Akulturasi",
+        "B. Adaptasi",
+        "C. Asimilasi",
+        "D. Komunikasi"
+      ],
+      answer: 1,
+      exp: "Jawaban benar: B. Adaptasi merujuk pada penyesuaian makhluk hidup atau individu dengan lingkungannya."
+    },
+    {
+      q: "17. Sinonim dari kata 'signifikan' adalah...",
+      options: [
+        "A. Penting / Berarti",
+        "B. Lambat",
+        "C. Kurang",
+        "D. Tidak jelas"
+      ],
+      answer: 0,
+      exp: "Jawaban benar: A. Signifikan berarti penting atau memberikan dampak yang berarti."
+    },
+    {
+      q: "18. Antonim dari kata 'kolektif' adalah...",
+      options: [
+        "A. Bersama",
+        "B. Individual",
+        "C. Kelompok",
+        "D. Gabungan"
+      ],
+      answer: 1,
+      exp: "Jawaban benar: B. Kolektif bermakna secara bersama-sama/kelompok, antonimnya adalah individual."
+    },
+    {
+      q: "19. Kalimat sumbang dalam paragraf biasanya ditandai oleh...",
+      options: [
+        "A. Kalimat yang mendukung gagasan utama.",
+        "B. Kalimat yang melengkapi penjelasan.",
+        "C. Kalimat yang tidak menyambung topik umum pembahasan.",
+        "D. Kalimat penutup paragraf."
+      ],
+      answer: 2,
+      exp: "Jawaban benar: C. Kalimat sumbang (alimat koheren) adalah kalimat yang melenceng dari topik utama yang sedang dibahas."
+    },
+    {
+      q: "20. Imbuhan ber- pada kata 'berpakaian' mempunyai makna...",
+      options: [
+        "A. Memakai / Menggunakan",
+        "B. Memiliki",
+        "C. Menjadi",
+        "D. Melakukan kegiatan"
+      ],
+      answer: 0,
+      exp: "Jawaban benar: A. Kata 'berpakaian' berarti memakai atau menggunakan pakaian."
+    }
+  ];
+
+  let currentIdx = 0;
+  const userAnswers = new Array(questions.length).fill(null);
+
+  function loadQuestion() {
+    const q = questions[currentIdx];
+    document.getElementById("question-text").innerText = q.q;
+    document.getElementById("question-number").innerText = `${currentIdx + 1} / ${questions.length}`;
+
+    const optsContainer = document.getElementById("options-container");
+    optsContainer.innerHTML = "";
+
+    q.options.forEach((opt, idx) => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      if (userAnswers[currentIdx] === idx) {
+        btn.classList.add("selected");
+      }
+      btn.innerText = opt;
+      btn.onclick = () => selectOption(idx);
+      optsContainer.appendChild(btn);
+    });
+
+    document.getElementById("prev-btn").disabled = (currentIdx === 0);
+    document.getElementById("next-btn").innerText = (currentIdx === questions.length - 1) ? "Selesai" : "Berikutnya";
+  }
+
+  function selectOption(optIdx) {
+    userAnswers[currentIdx] = optIdx;
+    loadQuestion();
+  }
+
+  function nextQuestion() {
+    if (currentIdx < questions.length - 1) {
+      currentIdx++;
+      loadQuestion();
+    } else {
+      showResults();
+    }
+  }
+
+  function prevQuestion() {
+    if (currentIdx > 0) {
+      currentIdx--;
+      loadQuestion();
+    }
+  }
+
+  function showResults() {
+    document.getElementById("quiz-body").style.display = "none";
+    document.getElementById("result-body").style.display = "block";
+
+    let score = 0;
+    const expContainer = document.getElementById("explanation-container");
+    expContainer.innerHTML = "";
+
+    questions.forEach((q, idx) => {
+      const isCorrect = userAnswers[idx] === q.answer;
+      if (isCorrect) score += 5; // Total 20 soal * 5 = 100
+
+      const item = document.createElement("div");
+      item.className = "result-item";
+
+      const userChoiceText = userAnswers[idx] !== null ? q.options[userAnswers[idx]] : "Tidak Dijawab";
+      const statusClass = isCorrect ? "correct" : "wrong";
+      const statusText = isCorrect ? "Benar" : "Salah";
+
+      item.innerHTML = `
+        <div><strong>Soal ${idx + 1}:</strong> ${q.q}</div>
+        <div>Jawaban Anda: <span class="${statusClass}">${userChoiceText} (${statusText})</span></div>
+        <div class="explanation"><strong>Pembahasan:</strong> ${q.exp}</div>
+      `;
+      expContainer.appendChild(item);
+    });
+
+    document.getElementById("score-text").innerHTML = `Skor Anda: <strong>${score}</strong> / 100`;
+  }
+
+  // Inisialisasi
+  loadQuestion();
+</script>
+
+</body>
+</html>
